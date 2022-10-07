@@ -80,3 +80,4 @@ if __name__ == "__main__":
     input_values = [True, False, True, False, True, False, True, False]
     output_values = sim_logic_dag(dag, input_values, sim_func)
     draw_logic_dag(dag)
+
