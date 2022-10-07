@@ -1,3 +1,6 @@
 .idea/
 lib/
 __pycache__/
+*.tar.xz
+*.html
+*.egg-info/

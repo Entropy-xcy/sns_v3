@@ -97,7 +97,7 @@ def random_logic_dag_gen(n: int, m: int, num_inputs: int, num_outputs: int, prob
         g.nodes[output_node]['op'] = 'out'
         g.nodes[output_node]['idx'] = i
 
-    if len(input_nodes_dag) < 0 or len(output_nodes_dag) < 0:
+    if len(input_nodes_dag) == 0 or len(output_nodes_dag) == 0:
         # rerun
         return random_logic_dag_gen(n, m, num_inputs, num_outputs, prob_dict)
 
