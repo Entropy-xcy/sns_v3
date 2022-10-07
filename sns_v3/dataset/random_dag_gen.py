@@ -137,6 +137,14 @@ def draw_logic_dag(dag: nx.DiGraph):
             dag.nodes[n]['label'] = 'out' + str(dag.nodes[n]['idx'])
         else:
             dag.nodes[n]['label'] = dag.nodes[n]['op']
+        if 'sim_value' in dag.nodes[n]:
+            # change outgoing edge color
+            if dag.nodes[n]['sim_value'] == True:
+                color = "red"
+            else:
+                color = "black"
+            for e in dag.out_edges(n):
+                dag.edges[e]['color'] = color
     net = Network(directed=True)
     net.from_nx(dag)
     net.show("logic_dag.html")
