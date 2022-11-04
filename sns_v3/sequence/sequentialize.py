@@ -34,17 +34,51 @@ def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
 
     # Find starting nodes
     starting_nodes = [n for n in dag.nodes if len(list(dag.predecessors(n))) == 0]
-    dag.add_node(1000, token='[START]')
+    start_node = 999999
+    dag.add_node(start_node, token='[START]')
     for n in starting_nodes:
-        dag.add_edge(1000, n)
-    return dfs_visit(1000)
+        dag.add_edge(start_node, n)
+    return dfs_visit(start_node)
 
 
 # Lexicographical Topological Sort
 def sequence_to_dag(sequence):
     g = nx.DiGraph()
+    cursor_stack = []
+    max_node = 0
+
+    def get_new_node():
+        nonlocal max_node
+        max_node += 1
+        return max_node
+
+    def push_cursor():
+        cursor_stack.append(max_node)
+
+    def pop_cursor():
+        return cursor_stack.pop()
+
+    def get_cursor():
+        return cursor_stack[-1]
+
     for s in sequence:
-        pass
+        if s == '[START]':
+            cursor = get_new_node()
+            g.add_node(cursor, token=s)
+        elif s == '[END]':
+            continue
+        elif s.startswith('in'):
+            pass
+        elif s.startswith('out'):
+            pass
+        elif s == "and":
+            pass
+        elif s == "or":
+            pass
+        elif s == "not":
+            pass
+        else:
+            raise ValueError(f'Unknown token {s}')
     return g
 
 
