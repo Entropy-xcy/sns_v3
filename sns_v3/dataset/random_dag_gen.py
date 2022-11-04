@@ -134,13 +134,13 @@ def draw_logic_dag(dag: nx.DiGraph):
         # if input
         if dag.nodes[n]['op'] == 'in':
             dag.nodes[n]['color'] = 'red'
-            dag.nodes[n]['label'] = 'in' + str(dag.nodes[n]['idx'])
+            dag.nodes[n]['label'] = 'in' + str(dag.nodes[n]['idx']) + "\n" + str(n)
         # if output
         elif dag.nodes[n]['op'] == 'out':
             dag.nodes[n]['color'] = 'green'
-            dag.nodes[n]['label'] = 'out' + str(dag.nodes[n]['idx'])
+            dag.nodes[n]['label'] = 'out' + str(dag.nodes[n]['idx']) + "\n" + str(n)
         else:
-            dag.nodes[n]['label'] = dag.nodes[n]['op']
+            dag.nodes[n]['label'] = dag.nodes[n]['op'] + "\n" + str(n)
         if 'sim_value' in dag.nodes[n]:
             # change outgoing edge color
             if dag.nodes[n]['sim_value'] == True:
