@@ -11,6 +11,7 @@ START_NODE = 999999
 
 def tokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
     g = nx.DiGraph(g)
+    g = g.reverse()
     for n in g.nodes:
         op = g.nodes[n]['op']
         if "idx" in g.nodes[n]:
@@ -110,17 +111,13 @@ def evaluate_and_print(dag: nx.DiGraph, bool_seq: List[List[bool]]):
 if __name__ == "__main__":
     # input_val = [False, False, False, False, False, False, True, False]
     ds = load_dataset_from_dir('dataset_10_10', 100)
-    dag, io_examples = ds[4]
-    draw_logic_dag(dag, 'dag0.html')
-    draw_logic_dag(dag, 'dag.html')
+    dag, io_examples = ds[1]
     bool_seq = str_io_samples_to_bool_seq(io_examples)
-    evaluate_and_print(dag, bool_seq)
     tok_g = tokenize_graph(dag)
 
     # Convert and Recover
     seq = dag_to_sequence(tok_g)
-    rec_g = sequence_to_dag(seq)
-    retok_g = untokenize_graph(rec_g)
-    draw_logic_dag(retok_g, 'dag_recovered.html')
+    print(seq)
+    # rec_g = sequence_to_dag(seq)
+    # retok_g = untokenize_graph(rec_g)
 
-    evaluate_and_print(retok_g, bool_seq)
