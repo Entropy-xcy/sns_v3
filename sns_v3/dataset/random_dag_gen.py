@@ -127,20 +127,20 @@ def random_logic_dag_gen(n: int, m: int, num_inputs: int, num_outputs: int, prob
     return g
 
 
-def draw_logic_dag(dag: nx.DiGraph):
+def draw_logic_dag(dag: nx.DiGraph, fname='dag.html'):
     for n in dag.nodes:
         if 'op' not in dag.nodes[n]:
             dag.nodes[n]['op'] = 'unknown'
         # if input
         if dag.nodes[n]['op'] == 'in':
             dag.nodes[n]['color'] = 'red'
-            dag.nodes[n]['label'] = 'in' + str(dag.nodes[n]['idx'])
+            dag.nodes[n]['label'] = 'in' + str(dag.nodes[n]['idx']) + "\n" + str(n)
         # if output
         elif dag.nodes[n]['op'] == 'out':
             dag.nodes[n]['color'] = 'green'
-            dag.nodes[n]['label'] = 'out' + str(dag.nodes[n]['idx'])
+            dag.nodes[n]['label'] = 'out' + str(dag.nodes[n]['idx']) + "\n" + str(n)
         else:
-            dag.nodes[n]['label'] = dag.nodes[n]['op']
+            dag.nodes[n]['label'] = dag.nodes[n]['op'] + "\n" + str(n)
         if 'sim_value' in dag.nodes[n]:
             # change outgoing edge color
             if dag.nodes[n]['sim_value'] == True:
@@ -151,7 +151,7 @@ def draw_logic_dag(dag: nx.DiGraph):
                 dag.edges[e]['color'] = color
     net = Network(directed=True)
     net.from_nx(dag)
-    net.show("logic_dag.html")
+    net.show(fname)
 
 
 if __name__ == "__main__":

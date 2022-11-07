@@ -10,6 +10,16 @@ def bool_seq_to_str(values: List[bool]) -> str:
     return ''.join(['1' if v else '0' for v in values])
 
 
+def str_to_bool_seq(s: str) -> List[bool]:
+    return [True if x == '1' else False for x in s]
+
+
+def str_io_samples_to_bool_seq(io_samples: List[Tuple[str, str]]) -> List[Tuple[List[bool], List[bool]]]:
+    ret = []
+    for i, o in io_samples:
+        ret.append([str_to_bool_seq(i), str_to_bool_seq(o)])
+    return ret
+
 def gen_logic_dag_io_examples(dag: nx.DiGraph, sim_func) -> List[Tuple[str, str]]:
     input_nodes = [n for n in dag.nodes if dag.nodes[n]['op'] == 'in']
 
@@ -49,6 +59,7 @@ def generate_save_dataset(outfile_name: str, num_nodes: int, num_edges: int, sim
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_nodes', type=int, default=10)
     parser.add_argument('--num_edges', type=int, default=10)
