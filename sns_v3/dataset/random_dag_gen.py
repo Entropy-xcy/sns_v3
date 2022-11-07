@@ -127,7 +127,7 @@ def random_logic_dag_gen(n: int, m: int, num_inputs: int, num_outputs: int, prob
     return g
 
 
-def draw_logic_dag(dag: nx.DiGraph):
+def draw_logic_dag(dag: nx.DiGraph, fname='dag.html'):
     for n in dag.nodes:
         if 'op' not in dag.nodes[n]:
             dag.nodes[n]['op'] = 'unknown'
@@ -151,7 +151,7 @@ def draw_logic_dag(dag: nx.DiGraph):
                 dag.edges[e]['color'] = color
     net = Network(directed=True)
     net.from_nx(dag)
-    net.show("logic_dag.html")
+    net.show(fname)
 
 
 if __name__ == "__main__":

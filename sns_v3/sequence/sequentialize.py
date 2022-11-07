@@ -1,8 +1,12 @@
 import networkx as nx
 from typing import List, Dict, Any
-
+import copy
+from sns_v3.dataset.dataset_gen import str_io_samples_to_bool_seq
 from sns_v3.dataset.dataset_load_example import load_dataset_from_dir
+from sns_v3.dataset.logic_dag_sim import evaluate, simulate
 from sns_v3.dataset.random_dag_gen import draw_logic_dag
+
+START_NODE = 999999
 
 
 def tokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
@@ -20,6 +24,23 @@ def tokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
     return g
 
 
+def untokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
+    g = nx.DiGraph(g)
+    for n in list(g.nodes):
+        token = g.nodes[n]['token']
+        if token == "and" or token == "or" or token == "not":
+            g.nodes[n]['op'] = token
+        elif token.startswith('in'):
+            g.nodes[n]['op'] = 'in'
+            g.nodes[n]['idx'] = int(token[2:])
+        elif token.startswith('out'):
+            g.nodes[n]['op'] = 'out'
+            g.nodes[n]['idx'] = int(token[3:])
+        elif token == "[START]":
+            g.remove_node(n)
+    return g
+
+
 # Lexicographical Topological Sort
 def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
     def dfs_visit(n: int) -> List[str]:
@@ -34,11 +55,11 @@ def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
 
     # Find starting nodes
     starting_nodes = [n for n in dag.nodes if len(list(dag.predecessors(n))) == 0]
-    start_node = 999999
-    dag.add_node(start_node, token='[START]')
+
+    dag.add_node(START_NODE, token='[START]')
     for n in starting_nodes:
-        dag.add_edge(start_node, n)
-    return dfs_visit(start_node)
+        dag.add_edge(START_NODE, n)
+    return dfs_visit(START_NODE)
 
 
 # Lexicographical Topological Sort
@@ -52,8 +73,8 @@ def sequence_to_dag(sequence):
         max_node += 1
         return max_node
 
-    def push_cursor():
-        cursor_stack.append(max_node)
+    def push_cursor(node):
+        cursor_stack.append(node)
 
     def pop_cursor():
         return cursor_stack.pop()
@@ -63,31 +84,43 @@ def sequence_to_dag(sequence):
 
     for s in sequence:
         if s == '[START]':
-            cursor = get_new_node()
-            g.add_node(cursor, token=s)
+            n = get_new_node()
+            g.add_node(n, token=s)
+            push_cursor(n)
         elif s == '[END]':
-            continue
-        elif s.startswith('in'):
-            pass
-        elif s.startswith('out'):
-            pass
-        elif s == "and":
-            pass
-        elif s == "or":
-            pass
-        elif s == "not":
-            pass
+            pop_cursor()
+        elif s == "and" or s == "or" or s == "not" or s.startswith('in') or s.startswith('out'):
+            n = get_new_node()
+            g.add_node(n, token=s)
+            g.add_edge(get_cursor(), max_node)
+            push_cursor(n)
         else:
             raise ValueError(f'Unknown token {s}')
     return g
 
 
+def evaluate_and_print(dag: nx.DiGraph, bool_seq: List[List[bool]]):
+    seq = copy.deepcopy(bool_seq)
+    wrong_count_total, bit_wrong_count_total, accuracy_loss_total = evaluate(dag, seq)
+    print(f'wrong_count_total: {wrong_count_total}')
+    print(f'bit_wrong_count_total: {bit_wrong_count_total}')
+    print(f'accuracy_loss_total: {accuracy_loss_total}')
+
+
 if __name__ == "__main__":
+    # input_val = [False, False, False, False, False, False, True, False]
     ds = load_dataset_from_dir('dataset_10_10', 100)
-    dag, io_examples = ds[2]
-    draw_logic_dag(dag)
+    dag, io_examples = ds[4]
+    draw_logic_dag(dag, 'dag0.html')
+    draw_logic_dag(dag, 'dag.html')
+    bool_seq = str_io_samples_to_bool_seq(io_examples)
+    evaluate_and_print(dag, bool_seq)
     tok_g = tokenize_graph(dag)
+
+    # Convert and Recover
     seq = dag_to_sequence(tok_g)
-    print(seq)
-    # print(tok_g.nodes)
-    exit()
+    rec_g = sequence_to_dag(seq)
+    retok_g = untokenize_graph(rec_g)
+    draw_logic_dag(retok_g, 'dag_recovered.html')
+
+    evaluate_and_print(retok_g, bool_seq)

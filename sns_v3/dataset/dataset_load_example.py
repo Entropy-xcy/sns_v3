@@ -13,10 +13,12 @@ def load_dataset_from_dir(dir_path: str, num_samples: int) -> List[Tuple[nx.DiGr
 
 
 if __name__ == "__main__":
-    ds = load_dataset_from_dir('dataset', 100)
-    dag = ds[0][0]
-    io_examples = ds[0][1]
-    for i, o in io_examples:
-        print(i, "->", o)
-    for n in dag.nodes:
-        print(n, dag.nodes[n])
+    ds = load_dataset_from_dir('dataset_10_10', 100)
+    print("Verifying Correctness of Dataset...")
+    for dag, io_samples in ds:
+        bool_seq = str_io_samples_to_bool_seq(io_samples)
+        wrong_count_total, bit_wrong_count_total, accuracy_loss_total = evaluate(dag, bool_seq)
+        assert wrong_count_total == 0
+        assert bit_wrong_count_total == 0
+        assert accuracy_loss_total == 0
+
