@@ -2,3 +2,5 @@ networkx
 numpy
 pyvis
 ray[extras]
+tqdm
+

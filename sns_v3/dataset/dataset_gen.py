@@ -61,9 +61,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_nodes', type=int, default=10)
-    parser.add_argument('--num_edges', type=int, default=10)
-    parser.add_argument('--num_dags', type=int, default=100)
+    parser.add_argument('--num_nodes', type=int, default=100)
+    parser.add_argument('--num_edges', type=int, default=100)
+    parser.add_argument('--num_dags', type=int, default=10000)
     parser.add_argument('--output_dir', type=str, default=None)
     args = parser.parse_args()
     args.output_dir = args.output_dir or f'./dataset_{args.num_nodes}_{args.num_edges}'

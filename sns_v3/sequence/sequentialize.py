@@ -5,13 +5,13 @@ from sns_v3.dataset.dataset_gen import str_io_samples_to_bool_seq
 from sns_v3.dataset.dataset_load_example import load_dataset_from_dir
 from sns_v3.dataset.logic_dag_sim import evaluate, simulate
 from sns_v3.dataset.random_dag_gen import draw_logic_dag
+from tqdm import tqdm
 
 START_NODE = 999999
 
 
 def tokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
     g = nx.DiGraph(g)
-    g = g.reverse()
     for n in g.nodes:
         op = g.nodes[n]['op']
         if "idx" in g.nodes[n]:
@@ -27,13 +27,20 @@ def tokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
 
 def untokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
     g = nx.DiGraph(g)
+    in_nodes = {}
     for n in list(g.nodes):
         token = g.nodes[n]['token']
         if token == "and" or token == "or" or token == "not":
             g.nodes[n]['op'] = token
         elif token.startswith('in'):
-            g.nodes[n]['op'] = 'in'
-            g.nodes[n]['idx'] = int(token[2:])
+            if token not in in_nodes:
+                in_nodes[token] = n
+                g.nodes[n]['op'] = 'in'
+                g.nodes[n]['idx'] = int(token[2:])
+            else:
+                for succ in list(g.successors(n)):
+                    g.add_edge(in_nodes[token], succ)
+                g.remove_node(n)
         elif token.startswith('out'):
             g.nodes[n]['op'] = 'out'
             g.nodes[n]['idx'] = int(token[3:])
@@ -53,6 +60,9 @@ def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
             seq += dfs_visit(s)
         seq.append('[END]')
         return seq
+
+    dag = nx.DiGraph(dag)
+    dag = dag.reverse()
 
     # Find starting nodes
     starting_nodes = [n for n in dag.nodes if len(list(dag.predecessors(n))) == 0]
@@ -97,27 +107,33 @@ def sequence_to_dag(sequence):
             push_cursor(n)
         else:
             raise ValueError(f'Unknown token {s}')
+    g = g.reverse()
     return g
 
 
 def evaluate_and_print(dag: nx.DiGraph, bool_seq: List[List[bool]]):
     seq = copy.deepcopy(bool_seq)
     wrong_count_total, bit_wrong_count_total, accuracy_loss_total = evaluate(dag, seq)
-    print(f'wrong_count_total: {wrong_count_total}')
-    print(f'bit_wrong_count_total: {bit_wrong_count_total}')
-    print(f'accuracy_loss_total: {accuracy_loss_total}')
+    # print(f'wrong_count_total: {wrong_count_total}')
+    # print(f'bit_wrong_count_total: {bit_wrong_count_total}')
+    # print(f'accuracy_loss_total: {accuracy_loss_total}')
+    assert wrong_count_total == 0
+    assert bit_wrong_count_total == 0
+    assert accuracy_loss_total == 0
+
+
+def fuzzing_seq_dag_io(dag, io_examples):
+    io_examples = str_io_samples_to_bool_seq(io_examples)
+    tok_g = tokenize_graph(dag)
+    seq = dag_to_sequence(tok_g)
+    rec_g = sequence_to_dag(seq)
+    retok_g = untokenize_graph(rec_g)
+    evaluate_and_print(dag, io_examples)
+    evaluate_and_print(retok_g, io_examples)
 
 
 if __name__ == "__main__":
-    # input_val = [False, False, False, False, False, False, True, False]
-    ds = load_dataset_from_dir('dataset_10_10', 100)
-    dag, io_examples = ds[1]
-    bool_seq = str_io_samples_to_bool_seq(io_examples)
-    tok_g = tokenize_graph(dag)
-
-    # Convert and Recover
-    seq = dag_to_sequence(tok_g)
-    print(seq)
-    # rec_g = sequence_to_dag(seq)
-    # retok_g = untokenize_graph(rec_g)
+    ds = load_dataset_from_dir('dataset_100_100', 10000)
+    for dag, io_examples in tqdm(ds):
+        fuzzing_seq_dag_io(dag, io_examples)
 

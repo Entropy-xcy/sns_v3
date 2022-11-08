@@ -35,7 +35,7 @@ def sim_logic_dag(g: nx.DiGraph, input_values: List[bool], sim_func: Dict[str, A
     # sort output nodes with their idx
     output_nodes = sorted(output_nodes, key=lambda n: g.nodes[n]['idx'])
 
-    assert len(input_nodes) == len(input_values)
+    assert len(input_nodes) == len(input_values), 'input_nodes: {}, input_values: {}'.format(input_nodes, input_values)
 
     # Step 1: assign input values to input nodes
     for i, n in enumerate(input_nodes):
