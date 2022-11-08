@@ -2,7 +2,7 @@ import networkx as nx
 from typing import List, Dict, Any
 import copy
 from sns_v3.dataset.dataset_gen import str_io_samples_to_bool_seq
-from sns_v3.dataset.dataset_load_example import load_dataset_from_dir
+from sns_v3.dataset.load_dataset import load_dataset_from_dir
 from sns_v3.dataset.logic_dag_sim import evaluate, simulate
 from sns_v3.dataset.random_dag_gen import draw_logic_dag
 from tqdm import tqdm
