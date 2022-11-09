@@ -13,7 +13,12 @@ def load_one_sequence(in_tup):
     io = str_io_samples_to_bool_seq(io_examples)
     tok_g = tokenize_graph(dag)
     seq = dag_to_sequence(tok_g)
-    return (io, seq)
+
+    int_seq = []
+    for i in io_examples:
+        this_tup = (int(i[0], 2), int(i[1], 2))
+        int_seq.append(this_tup)
+    return (int_seq, seq)
 
 
 def load_sequence_dataset(fname: str, num: int):

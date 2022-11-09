@@ -3,4 +3,6 @@ numpy
 pyvis
 ray[extras]
 tqdm
+transformers
+pytorch_lightning
 
