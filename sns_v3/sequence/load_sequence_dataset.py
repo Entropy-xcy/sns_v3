@@ -37,6 +37,10 @@ def load_sequence_dataset(fname: str, num: int):
 
 
 if __name__ == "__main__":
-    X, y = load_sequence_dataset('dataset_100_100', 10000)
-    print(len(X))
-    print(len(y))
+    X, y = load_sequence_dataset('dataset_10_10', 100)
+    for i in X:
+        outputs = [i[1] for i in i]
+        unique_out = len(set(outputs))
+        if unique_out != 1:
+            print(unique_out)
+

@@ -133,7 +133,7 @@ def fuzzing_seq_dag_io(dag, io_examples):
 
 
 if __name__ == "__main__":
-    ds = load_dataset_from_dir('dataset_100_100', 10000)
+    ds = load_dataset_from_dir('dataset_100_100', 100)
     for dag, io_examples in tqdm(ds):
         fuzzing_seq_dag_io(dag, io_examples)
 

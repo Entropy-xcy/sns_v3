@@ -26,7 +26,7 @@ def _sim(g: nx.DiGraph, sim_func: Dict[str, Any]):
 
 
 def sim_logic_dag(g: nx.DiGraph, input_values: List[bool], sim_func: Dict[str, Any]) -> List[bool]:
-    # g = nx.DiGraph(g)
+    g = nx.DiGraph(g)
     # Add sort here
     input_nodes = [n for n in g.nodes if g.nodes[n]['op'] == 'in']
     # sort input nodes with their idx
@@ -125,4 +125,5 @@ if __name__ == "__main__":
     dag = random_logic_dag_gen(10, 5, num_inputs=8, num_outputs=8, prob_dict=probability_dict)
     input_values = [True, False, True, False, True, False, True, False]
     output_values = sim_logic_dag(dag, input_values, sim_func)
+    print(output_values)
     draw_logic_dag(dag)
