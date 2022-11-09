@@ -43,4 +43,3 @@ if __name__ == "__main__":
         unique_out = len(set(outputs))
         if unique_out != 1:
             print(unique_out)
-
