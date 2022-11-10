@@ -49,7 +49,6 @@ def untokenize_graph(g: nx.DiGraph) -> nx.DiGraph:
     return g
 
 
-# Lexicographical Topological Sort
 def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
     def dfs_visit(n: int) -> List[str]:
         # get and sort all successors
@@ -73,7 +72,6 @@ def dag_to_sequence(dag: nx.DiGraph) -> List[str]:
     return dfs_visit(START_NODE)
 
 
-# Lexicographical Topological Sort
 def sequence_to_dag(sequence):
     g = nx.DiGraph()
     cursor_stack = []

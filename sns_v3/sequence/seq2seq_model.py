@@ -42,11 +42,11 @@ class Seq2SeqModel(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    ds = Seq2SeqDataset('dataset_100_100', 100)
+    ds = Seq2SeqDataset('dataset_50_100', 100000)
     test_percent = 0.01
     train_len, test_len = int(len(ds) * (1 - test_percent)), int(len(ds) * test_percent)
     train_ds, test_ds = torch.utils.data.random_split(ds, [train_len, test_len])
-    train_dl, test_dl = DataLoader(train_ds, batch_size=4, shuffle=True, drop_last=True), \
+    train_dl, test_dl = DataLoader(train_ds, batch_size=8, shuffle=True, drop_last=True), \
                         DataLoader(test_ds, batch_size=1, shuffle=True, drop_last=True)
     model = Seq2SeqModel(tokenizer=ds.get_tokenizer())
     trainer = pl.Trainer(gpus=1, max_epochs=1000, check_val_every_n_epoch=10)
