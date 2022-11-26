@@ -26,48 +26,71 @@ def _sim(g: nx.DiGraph, sim_func: Dict[str, Any]):
 
 
 def sim_logic_dag(g: nx.DiGraph, input_values: List[bool], sim_func: Dict[str, Any]) -> List[bool]:
+    NUM_INPUTS = 8
+    NUM_OUTPUTS = 8
     g = nx.DiGraph(g)
     # Add sort here
     input_nodes = [n for n in g.nodes if g.nodes[n]['op'] == 'in']
     # sort input nodes with their idx
-    input_nodes = sorted(input_nodes, key=lambda n: g.nodes[n]['idx'])
-    output_nodes = [n for n in g.nodes if g.nodes[n]['op'] == 'out']
-    # sort output nodes with their idx
-    output_nodes = sorted(output_nodes, key=lambda n: g.nodes[n]['idx'])
+    # input_nodes = sorted(input_nodes, key=lambda n: g.nodes[n]['idx'])
 
-    assert len(input_nodes) == len(input_values), 'input_nodes: {}, input_values: {}'.format(input_nodes, input_values)
+    # output_nodes = [n for n in g.nodes if g.nodes[n]['op'] == 'out']
+    # sort output nodes with their idx
+    # output_nodes = sorted(output_nodes, key=lambda n: g.nodes[n]['idx'])
+
+    # assert len(input_nodes) == len(input_values), 'input_nodes: {}, input_values: {}'.format(input_nodes, input_values)
 
     # Step 1: assign input values to input nodes
-    for i, n in enumerate(input_nodes):
-        g.nodes[n]['sim_value'] = input_values[i]
+    # for i, n in enumerate(input_nodes):
+    #     g.nodes[n]['sim_value'] = input_values[i]
+    for i in range(len(input_nodes)):
+        idx = g.nodes[input_nodes[i]]['idx']
+        n = input_nodes[i]
+        g.nodes[n]['sim_value'] = input_values[idx]
 
     _sim(g, sim_func)
 
     # Step 2: get output values
-    for n in output_nodes:
-        assert 'sim_value' in g.nodes[n]
-    sim_output_values = [g.nodes[n]['sim_value'] for n in output_nodes]
+    # for n in output_nodes:
+    #     assert 'sim_value' in g.nodes[n]
+    # sim_output_values = [g.nodes[n]['sim_value'] for n in output_nodes]
+    sim_output_values = []
+    for i in range(NUM_OUTPUTS):
+        out_n = None
+        for n in g.nodes:
+            if g.nodes[n]['op'] == 'out' and g.nodes[n]['idx'] == i:
+                out_n = n
+                break
+        if out_n is not None:
+            sim_output_values.append(g.nodes[out_n]['sim_value'])
+        else:
+            sim_output_values.append(False)
+        # sim_output_values.append(g.nodes[out_n]['sim_value'])
     return sim_output_values
 
 
 def and_func(values: List[bool]) -> bool:
-    assert len(values) == 2
+    # assert len(values) == 2
     return all(values)
 
 
 def or_func(values: List[bool]) -> bool:
-    assert len(values) == 2
+    # assert len(values) == 2
     return any(values)
 
 
 def not_func(values: List[bool]) -> bool:
-    assert len(values) == 1
-    return not values[0]
+    # assert len(values) == 1
+    if len(values) >= 1:
+        return not values[0]
+    return False
 
 
 def pass_func(values: List[bool]) -> bool:
-    assert len(values) == 1
-    return values[0]
+    # assert len(values) == 1
+    if len(values) >= 1:
+        return values[0]
+    return False
 
 
 def bit_wrong_count(a: List[bool], b: List[bool]) -> int:
