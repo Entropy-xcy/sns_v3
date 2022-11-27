@@ -47,9 +47,11 @@ class Seq2SeqModel(pl.LightningModule):
 
         if self.global_step not in self.untoks.keys():
             self.untoks[self.global_step] = {}
-        self.untoks[self.global_step][batch_idx] = gen_untoks
+        self.untoks[self.global_step][batch_idx] = {}
+        self.untoks[self.global_step][batch_idx]['gen'] = gen_untoks
+        self.untoks[self.global_step][batch_idx]['X'] = X.detach().cpu().tolist()
 
-        json_f = open("seq2seq_gen.json", "w")
+        json_f = open("seq2seq.json", "w")
         json.dump(self.untoks, json_f)
         json_f.close()
 

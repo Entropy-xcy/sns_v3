@@ -8,4 +8,5 @@ ray[extras]
 tqdm
 transformers
 pytorch_lightning
+matplotlib
 

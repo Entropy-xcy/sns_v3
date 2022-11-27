@@ -18,26 +18,28 @@ def load_one_sequence(in_tup):
     for i in io_examples:
         this_tup = (int(i[0], 2), int(i[1], 2))
         int_seq.append(this_tup)
-    return (int_seq, seq)
+    return (int_seq, seq, dag)
 
 
 def load_sequence_dataset(fname: str, num: int):
     ds = load_dataset_from_dir_ray(fname, num)
     X = []
     y = []
+    dags = []
     results = []
     for in_tup in ds:
         result = load_one_sequence.remote(in_tup)
         results.append(result)
     results = ray.get(results)
-    for io, seq in results:
+    for io, seq, dag in results:
         X.append(io)
         y.append(seq)
-    return X, y
+        dags.append(dag)
+    return X, y, dags
 
 
 if __name__ == "__main__":
-    X, y = load_sequence_dataset('dataset_10_10', 100)
+    X, y, dags = load_sequence_dataset('dataset_10_10', 100)
     for i in X:
         outputs = [i[1] for i in i]
         unique_out = len(set(outputs))
