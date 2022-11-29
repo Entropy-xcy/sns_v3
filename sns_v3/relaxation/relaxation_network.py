@@ -25,12 +25,6 @@ class Gate(nn.Module):
         not_a_b = not_a * b
         a_not_b = a * not_b
         a_b = a * b
-        #  and_val = a * b
-        #  nand_val = 1 - and_val
-        #  or_val = a + b - and_val
-        #  nor_val = 1 - or_val
-        #  xor_val = a + b - 2 * and_val
-        #  xnor_val = 1 - xor_val
 
         lut0001 = a_b
         lut0010 = a_not_b
@@ -71,9 +65,29 @@ class Gate(nn.Module):
             dim=1,
         )
 
+        lut_t = F.softmax(self.lut_tpe, dim=0)
+        result = torch.matmul(lut, lut_t)
+        return result
+
+    def regularization_loss(self):
         lut_tpe = F.softmax(self.lut_tpe, dim=0)
-        x = torch.matmul(lut, lut_tpe)
-        return x
+        neg_lut_tpe = 1.0 - lut_tpe
+        #  print(lut_tpe)
+        #  print(neg_lut_tpe)
+        sum_lst = []
+        for i in range(16):
+            prod_lst = [lut_tpe[i]]
+            for j in range(16):
+                if i != j:
+                    #  prod *= neg_lut_tpe[j]
+                    prod_lst.append(neg_lut_tpe[j])
+            prod = torch.prod(torch.stack(prod_lst))
+            #  sum += prod
+            sum_lst.append(prod)
+        sum_result = torch.sum(torch.stack(sum_lst))
+        #  print(sum)
+        neg_log_sum = -torch.log(sum_result)
+        return neg_log_sum
 
 
 class BinaryTreeLayer(nn.Module):
@@ -97,6 +111,9 @@ class BinaryTreeLayer(nn.Module):
         x = torch.cat([self.gates[i](x[:, i]) for i in range(x.shape[1])],
                       dim=1)
         return x
+    
+    def regularization_loss(self):
+        return sum([gate.regularization_loss() for gate in self.gates])
 
 
 class N2OneBinaryTree(pl.LightningModule):
@@ -116,10 +133,13 @@ class N2OneBinaryTree(pl.LightningModule):
             x = l(x)
         return x
 
+    def regularization_loss(self):
+        return sum([l.regularization_loss() for l in self.tree])
+
 
 class RelaxationNetwork(pl.LightningModule):
 
-    def __init__(self, in_bits: int, out_bits: int):
+    def __init__(self, in_bits: int, out_bits: int, regularization_weight: float=1.0):
         super().__init__()
         self.save_hyperparameters()
         self.trees = nn.ModuleList()
@@ -131,22 +151,41 @@ class RelaxationNetwork(pl.LightningModule):
         x = torch.cat([self.trees[i](x) for i in range(self.hparams.out_bits)],
                       dim=1)
         return x
+
+    def regularization_loss(self):
+        return sum([tree.regularization_loss() for tree in self.trees])
     
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        loss = F.binary_cross_entropy(y_hat, y)
-        self.log('train_loss', loss)
+        acc_loss = F.binary_cross_entropy(y_hat, y)
+        reg_loss = self.regularization_loss()
+        loss = self.hparams.regularization_weight * reg_loss + acc_loss
+        self.log('acc_loss', acc_loss, prog_bar=True)
+        self.log('reg_loss', reg_loss, prog_bar=True)
+        self.log('total_loss', loss, prog_bar=True)
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
 
 if __name__ == "__main__":
+    #  gate = Gate()
+    #  x = torch.tensor([[0, 0]], dtype=torch.float32)
+    #  y = torch.tensor([[0]], dtype=torch.float32)
+    #  out = gate(x)
+    #  reg = gate.regularization_loss()
+    #  print(reg)
+    #  loss = F.binary_cross_entropy(out, y) + reg
+    #  loss.backward()
+    #  print(loss)
+#
+    #  exit()
+    torch.autograd.set_detect_anomaly(True)
     ds = RelaxationDataset('dataset_100_100', 100)
-    dl = torch.utils.data.DataLoader(ds, batch_size=1)
+    dl = torch.utils.data.DataLoader(ds, batch_size=2)
     model = RelaxationNetwork(8, 8)
     trainer = pl.Trainer(max_epochs=100)
     trainer.fit(model, dl)

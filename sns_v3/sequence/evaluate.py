@@ -93,8 +93,8 @@ def evaluate_all():
 
 
 if __name__ == "__main__":
-    # evaluate_all()
-    # exit()
+    #  evaluate_all()
+    #  exit()
     # load json
     eval_result = json.load(open("eval_result.json", "r"))
     bit_wrong_count = []
@@ -119,4 +119,6 @@ if __name__ == "__main__":
     X_max = len(bit_wrong_count)
     plt.plot([0, X_max], [50, 50])
     plt.legend(["Bit Error", "Random Guess"])
-    plt.show()
+    #  plt.show()
+    plt.savefig("bit_error_rate.png")
+
