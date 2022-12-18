@@ -6,6 +6,7 @@ from sns_v3.dataset.load_dataset import load_dataset_from_dir
 from sns_v3.dataset.logic_dag_sim import evaluate, simulate
 from sns_v3.dataset.random_dag_gen import draw_logic_dag
 from tqdm import tqdm
+
 START_NODE = 999999
 
 

@@ -28,6 +28,7 @@ class Seq2SeqModel(pl.LightningModule):
     def generate(self, **kwargs):
         return self.seq2seq.generate(**kwargs)
 
+
     def training_step(self, batch, batch_idx):
         X, X_mask, y, y_mask = batch
         loss = self.seq2seq(input_ids=X, attention_mask=X_mask, labels=y).loss
