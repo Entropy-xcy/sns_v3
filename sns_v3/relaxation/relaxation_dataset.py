@@ -25,9 +25,7 @@ class RelaxationDataset(Dataset):
             y.append(str_to_tensor(io_example[1]))
         return torch.stack(X), torch.stack(y)
 
-    def __init__(self, dataset_dir: str, max_len: int):
-        ds = load_dataset_from_dir_ray(dataset_dir, max_len)
-        ds = ray.get(ds)
+    def __init__(self, ds):
         X = []
         y = []
         for _, io_examples in tqdm(ds):

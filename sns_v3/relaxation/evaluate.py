@@ -32,6 +32,8 @@ if __name__ == '__main__':
     mean_epoch_loss["reg_loss"] = mean_epoch_loss["reg_loss"] / mean_epoch_loss["reg_loss"].max() / 2.0
 
     for k, v in mean_epoch_loss.items():
+        # set minimum v to 0.0000001
+        v[v < 0.0000001] = 0.0000001
         print(k, v)
         plt.plot(v * 100.0, label=k)
     plt.legend()

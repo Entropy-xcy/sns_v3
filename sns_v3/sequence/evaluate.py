@@ -120,5 +120,5 @@ if __name__ == "__main__":
     plt.plot([0, X_max], [50, 50])
     plt.legend(["Bit Error", "Random Guess"])
     #  plt.show()
-    plt.savefig("bit_error_rate.png")
+    plt.savefig("bit_error_rate.pdf")
 

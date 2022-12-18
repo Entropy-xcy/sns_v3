@@ -7,6 +7,10 @@ import torch.nn.functional as F
 import torch
 from math import ceil
 from sns_v3.relaxation.relaxation_dataset import RelaxationDataset
+from sns_v3.dataset.load_dataset import load_dataset_from_dir, load_dataset_from_dir_ray
+import json
+import ray
+from tqdm import tqdm
 
 LUT = []
 for i in range(16):
@@ -176,6 +180,7 @@ class RelaxationNetwork(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.trees = nn.ModuleList()
+        self.log_results = []
         for i in range(out_bits):
             self.trees.append(N2OneBinaryTree(in_bits))
 
@@ -197,37 +202,70 @@ class RelaxationNetwork(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        #  acc_loss = F.binary_cross_entropy(y_hat, y)
-        # l1 loss 
         acc_loss = F.l1_loss(y_hat, y)
         reg_loss = self.regularization_loss()
         loss = self.hparams.regularization_weight * reg_loss + acc_loss
         self.log('acc_loss', acc_loss, prog_bar=True, on_epoch=True)
-        self.log('reg_loss', reg_loss, prog_bar=True)
-        self.log('total_loss', loss, prog_bar=True)
+        self.log('reg_loss', reg_loss, prog_bar=True, on_epoch=True)
+        self.log('total_loss', loss, prog_bar=True, on_epoch=True)
         exact_result = self.exact_forward(x)
         exact_loss = (exact_result - y).abs().mean()
         self.log('exact_loss', exact_loss, prog_bar=True, on_epoch=True)
+        self.exact_loss = exact_loss
+        self.acc_loss = acc_loss
+        self.reg_loss = reg_loss
+        self.total_loss = loss
         return loss
+    
+    def training_epoch_end(self, outputs):
+        log_dict = {
+            'acc_loss': self.acc_loss.item(),
+            'reg_loss': self.reg_loss.item(),
+            'total_loss': self.total_loss.item(),
+            'exact_loss': self.exact_loss.item(),
+        }
+        self.log_results.append(log_dict)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
 
-if __name__ == "__main__":
-    #  gate = Gate()
-    #  x = torch.tensor([[0, 0], [1, 0]], dtype=torch.float32)
-    #  y = torch.tensor([[0], [1]], dtype=torch.float32)
-    #  out = gate(x)
-    #  out1 = gate.exact_forward(x)
-    #  print(out1)
-    #  print(out)
+#  @ray.remote
+#  class ProgBar:
+    #  def __init__(self, max_value):
+        #  self.pbar = tqdm(total=max_value)
+        #  self.pbar.update(0)
 #
-    #  exit()
-    torch.autograd.set_detect_anomaly(True)
-    ds = RelaxationDataset('dataset_100_100', 100)
+    #  def update(self, value):
+        #  self.pbar.update(value)
+
+@ray.remote(num_cpus=1)
+def train(ds_raw, idx: int, pbar=None):
+    ds = RelaxationDataset(ds_raw)
+    ds.set_idx(idx)
     dl = torch.utils.data.DataLoader(ds, batch_size=2, shuffle=True)
     model = RelaxationNetwork(8, 8, regularization_weight=1e-3)
-    trainer = pl.Trainer(max_epochs=1000)
+    trainer = pl.Trainer(max_epochs=40, logger=None)
+    #  trainer.fit(model, dl, progress_bar_refresh_rate=0, weights_summary=None)
     trainer.fit(model, dl)
+    result_dcit = model.log_results.copy()
+    print(f"Finished training {idx}")
+    return result_dcit
+
+if __name__ == "__main__":
+    ray.init(log_to_driver=False)
+
+    total_num = 1000
+    ds_raw = load_dataset_from_dir_ray("dataset_100_100", total_num)
+    ds_raw = ray.get(ds_raw)
+    #  pbar = ProgBar.remote(total_num)
+    results = []
+    for i in range(total_num):
+        results.append(train.remote(ds_raw, i))
+    for i in tqdm(range(total_num)):
+        results[i] = ray.get(results[i])
+    print("done")
+    with open("relaxation_results.json", "w") as f:
+        json.dump(results, f)
+
