@@ -257,7 +257,8 @@ if __name__ == "__main__":
     ray.init(log_to_driver=False)
 
     total_num = 1000
-    ds_raw = load_dataset_from_dir_ray("dataset_100_100", total_num)
+    dataset_name = "dataset_100_100"
+    ds_raw = load_dataset_from_dir_ray(dataset_name, total_num)
     ds_raw = ray.get(ds_raw)
     #  pbar = ProgBar.remote(total_num)
     results = []
@@ -266,6 +267,6 @@ if __name__ == "__main__":
     for i in tqdm(range(total_num)):
         results[i] = ray.get(results[i])
     print("done")
-    with open("relaxation_results.json", "w") as f:
+    with open(f"relaxation_results_{dataset_name}.json", "w") as f:
         json.dump(results, f)
 
