@@ -33,7 +33,8 @@ class LogicSeqTokenizer:
 
 class Seq2SeqDataset(Dataset):
     def __init__(self, dataset_dir, max_len: int):
-        X, y = load_sequence_dataset(dataset_dir, max_len)
+        X, y, dags = load_sequence_dataset(dataset_dir, max_len)
+        self.io_samples = X
         input_ids = []
         for x in X:
             seq = [i[1] for i in x]
