@@ -67,7 +67,7 @@ def evaluate_seq(gen: List[AnyStr], io: List[AnyStr]):
 
 def evaluate_all():
     ray.init()
-    generated_sequences = json.load(open("seq2seq.json", "r"))
+    generated_sequences = json.load(open("seq2seq_dataset_100_100.json", "r"))
     success_count = 0
     total_count = 0
     eval_result = []
@@ -89,11 +89,11 @@ def evaluate_all():
             for gen_idx in range(len(eval_result[step][batch_idx])):
                 eval_result[step][batch_idx][gen_idx] = ray.get(eval_result[step][batch_idx][gen_idx])
     print(eval_result)
-    json.dump(eval_result, open("eval_result.json", "w"))
+    json.dump(eval_result, open("eval_result_dataset_100_100.json.json", "w"))
 
 
 if __name__ == "__main__":
-    #  evaluate_all()
+    evaluate_all()
     #  exit()
     # load json
     eval_result = json.load(open("eval_result.json", "r"))
