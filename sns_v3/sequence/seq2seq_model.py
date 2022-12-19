@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from sns_v3.sequence.load_sequence_dataset import load_sequence_dataset
 from sns_v3.sequence.seq2seq_dataset import Seq2SeqDataset, VOCAB
 import json
+import argparse
 
 
 class Seq2SeqModel(pl.LightningModule):
@@ -52,7 +53,7 @@ class Seq2SeqModel(pl.LightningModule):
         self.untoks[self.global_step][batch_idx]['gen'] = gen_untoks
         self.untoks[self.global_step][batch_idx]['X'] = X.detach().cpu().tolist()
 
-        json_f = open("seq2seq.json", "w")
+        json_f = open(f"seq2seq_{self.hparams.save_name}.json", "w")
         json.dump(self.untoks, json_f)
         json_f.close()
 
@@ -68,13 +69,16 @@ class Seq2SeqModel(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    ds = Seq2SeqDataset('dataset_50_100', 100000)
-    test_percent = 0.0001
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str, default='dataset_50_100')
+    args = parser.parse_args()
+    ds = Seq2SeqDataset(args.dataset, 10000)
+    test_percent = 0.01
     train_len, test_len = int(len(ds) * (1 - test_percent)), int(len(ds) * test_percent)
     train_ds, test_ds = torch.utils.data.random_split(ds, [train_len, test_len])
     train_dl, test_dl = DataLoader(train_ds, batch_size=4, shuffle=True, drop_last=True), \
                         DataLoader(test_ds, batch_size=1, shuffle=True, drop_last=True)
-    model = Seq2SeqModel(tokenizer=ds.get_tokenizer())
-    trainer = pl.Trainer(gpus=1, max_epochs=1000, val_check_interval=0.01)
+    model = Seq2SeqModel(tokenizer=ds.get_tokenizer(), save_name=args.dataset)
+    trainer = pl.Trainer(gpus=1, max_epochs=10, val_check_interval=0.1)
 
     trainer.fit(model, train_dl, test_dl)
