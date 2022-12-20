@@ -52,7 +52,6 @@ class Seq2SeqModel(pl.LightningModule):
         self.untoks[self.global_step][batch_idx] = {}
         self.untoks[self.global_step][batch_idx]['gen'] = gen_untoks
         self.untoks[self.global_step][batch_idx]['X'] = X.detach().cpu().tolist()
-
         json_f = open(f"seq2seq_{self.hparams.save_name}.json", "w")
         json.dump(self.untoks, json_f)
         json_f.close()
