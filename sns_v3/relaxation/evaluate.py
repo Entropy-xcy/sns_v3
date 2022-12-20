@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 plt.rcParams['font.size'] = 8
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.figure(figsize=(5.5, 5))
+plt.figure(figsize=(5.5, 4))
 
 def plot_subfig(ax, data_name, legend=False, title=None, xlabel=None):
     with open(data_name) as f:

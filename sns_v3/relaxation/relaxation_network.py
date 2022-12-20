@@ -227,7 +227,7 @@ class RelaxationNetwork(pl.LightningModule):
         self.log_results.append(log_dict)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=1e-3)
         return optimizer
 
 
