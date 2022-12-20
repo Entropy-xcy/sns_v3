@@ -13,6 +13,9 @@ from sns_v3.dataset.logic_dag_sim import evaluate
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+plt.rcParams['font.size'] = 8
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.figure(figsize=(5.5, 4))
 
 def pre_process_gen(gen: List[AnyStr]):
     # filter out [UNK]
@@ -67,7 +70,7 @@ def evaluate_seq(gen: List[AnyStr], io: List[AnyStr]):
 
 def evaluate_all():
     ray.init()
-    generated_sequences = json.load(open("seq2seq.json", "r"))
+    generated_sequences = json.load(open("seq2seq_dataset_100_100.json", "r"))
     success_count = 0
     total_count = 0
     eval_result = []
@@ -89,14 +92,11 @@ def evaluate_all():
             for gen_idx in range(len(eval_result[step][batch_idx])):
                 eval_result[step][batch_idx][gen_idx] = ray.get(eval_result[step][batch_idx][gen_idx])
     print(eval_result)
-    json.dump(eval_result, open("eval_result.json", "w"))
+    json.dump(eval_result, open("eval_result_dataset_100_100.json.json", "w"))
 
 
-if __name__ == "__main__":
-    #  evaluate_all()
-    #  exit()
-    # load json
-    eval_result = json.load(open("eval_result.json", "r"))
+def plot_eval_result(ds_fname, ax, xlabel=None, title=None):
+    eval_result = json.load(open(ds_fname, "r"))
     bit_wrong_count = []
     for step in range(len(eval_result)):
         sum = 0
@@ -112,13 +112,24 @@ if __name__ == "__main__":
                         best_wrong_count = wrong_count_total
             sum += best_wrong_bits
         bit_wrong_count.append(sum / len(eval_result[step]) / 2048 * 100.0)
-    plt.xlabel("Training Step")
-    plt.ylabel("%")
-    plt.title("Bit Error Rate")
-    plt.plot(bit_wrong_count)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+    if title is not None:
+        ax.set_title(title)
+    ax.set_ylabel("%")
+    ax.set_xlim(0, 50)
+    # plt.title("Bit Error Rate")
+    ax.plot(bit_wrong_count)
     X_max = len(bit_wrong_count)
-    plt.plot([0, X_max], [50, 50])
-    plt.legend(["Bit Error", "Random Guess"])
-    #  plt.show()
-    plt.savefig("bit_error_rate.pdf")
+    ax.plot([0, X_max], [50, 50])
+    ax.legend(["Bit Error", "Random Guess"])
 
+
+if __name__ == "__main__":
+    fig, ax = plt.subplots(3, 1)
+    plot_eval_result("eval_result_dataset_10_10.json.json", ax[0], title="$M=10, N=10$")
+    plot_eval_result("eval_result_dataset_50_100.json.json", ax[1], title="$M=50, N=100$")
+    plot_eval_result("eval_result_dataset_100_100.json.json", ax[2], xlabel="Training Step", title="$M=100, N=100$")
+    plt.tight_layout()
+    plt.savefig("eval_result.pdf")
+    plt.show()

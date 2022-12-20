@@ -160,5 +160,6 @@ if __name__ == "__main__":
         "or": (0.33, 2),
         "not": (1 - 0.33 - 0.33, 1),
     }
-    dag = random_logic_dag_gen(50, 80, num_inputs=8, num_outputs=8, prob_dict=probability_dict)
-    draw_logic_dag(dag)
+    dag = random_logic_dag_gen(10, 10, num_inputs=8, num_outputs=8, prob_dict=probability_dict)
+    print(dag)
+    draw_logic_dag(dag, fname='dag_large.html')
